@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Data Talker - Senior Data Analyst AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: url('bg.png') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            position: relative;
+        }
+
+        .view {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #0f172a;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.5);
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(37, 99, 235, 0.02);
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        #fileName {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(37, 99, 235, 0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .result-box {
+            display: none;
+            margin-top: 2rem;
+            text-align: left;
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .result-box h3 {
+            margin-bottom: 10px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+        }
+
+        .preview-stats {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            background: white;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .raw-text-box {
+            width: 100%;
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            text-align: left;
+            margin-top: 10px;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Responsive Improvements */
+        @media (max-width: 480px) {
+            .card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Login View -->
+        <div id="loginView" class="card view active">
+            <h1>Welcome Back</h1>
+            <p class="subtitle">Please enter your details to get started.</p>
+            <div class="input-group">
+                <label for="userName">Full Name</label>
+                <input type="text" id="userName" placeholder="John Doe">
+            </div>
+            <div class="input-group">
+                <label for="userEmail">Email Address</label>
+                <input type="email" id="userEmail" placeholder="john@example.com">
+            </div>
+            <button class="btn" onclick="navigateTo('welcomeView')">Login Now</button>
+        </div>
+
+        <!-- Welcome View -->
+        <div id="welcomeView" class="card view">
+            <h1>Hello, <span id="displayUserName">Explorer</span>!</h1>
+            <p class="subtitle">Your personal AI Data Analyst is ready. Upload a CSV to start exploring hidden insights.
+            </p>
+            <div style="font-size: 4rem; margin-bottom: 20px;">📊</div>
+            <button class="btn" onclick="navigateTo('uploadView')">Start Analyzing</button>
+            <button class="btn"
+                style="background: transparent; color: var(--text-muted); border: 1px solid var(--border-color);"
+                onclick="navigateTo('loginView')">Logout</button>
+        </div>
+
+        <!-- Upload View -->
+        <div id="uploadView" class="card view">
+            <h1>CSV Analyzer</h1>
+            <p class="subtitle">Upload your file and ask anything!</p>
+
+            <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <span class="upload-icon">📁</span>
+                <p>Click or drag & drop CSV file</p>
+                <div id="fileInfoArea">
+                    <p id="fileName"></p>
+                    <div id="statsArea" class="preview-stats" style="display: none;">
+                        <span class="stat-badge" id="rowCountBadge">0 Rows</span>
+                        <span class="stat-badge" id="colCountBadge">0 Cols</span>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept=".csv" style="display: none;"
+                    onchange="handleFileSelect(event)">
+            </div>
+
+            <div id="previewArea" style="display: none; margin-bottom: 1.5rem;">
+                <label>Data Preview (First 5 rows)</label>
+                <div class="view-toggle">
+                    <button class="toggle-btn selected" id="tableBtn" onclick="togglePreview('table')">Table
+                        View</button>
+                    <button class="toggle-btn" id="textBtn" onclick="togglePreview('text')">Text View</button>
+                </div>
+
+                <div class="table-container" id="tableViewContainer">
+                    <table id="previewTable">
+                        <thead id="tableHead"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="raw-text-box" id="textViewContainer" style="display: none;">
+                    <code id="rawTextPreview"></code>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="question">Your Question</label>
+                <textarea id="question" rows="2" placeholder="e.g., What is the average sales per month?"></textarea>
+            </div>
+
+            <button class="btn" id="analyzeBtn" onclick="analyzeData()">
+                <span id="btnText">Analyze Now</span>
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Consulting Senior Analyst...</p>
+            </div>
+
+            <div class="result-box" id="resultBox">
+                <h3><span>💡</span> Analysis Result</h3>
+                <div id="resultContent"></div>
+            </div>
+
+            <button class="btn" style="background: transparent; color: var(--text-muted); margin-top: 2rem;"
+                onclick="navigateTo('welcomeView')">← Back Dashboard</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+
+        function navigateTo(viewId) {
+            // Update personalized name
+            if (viewId === 'welcomeView') {
+                const name = document.getElementById('userName').value || 'Explorer';
+                document.getElementById('displayUserName').innerText = name;
+            }
+
+            // Toggle classes
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        // Drag and Drop Logic
+        const dropZone = document.getElementById('dropZone');
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                selectedFile = files[0];
+                document.getElementById('fileName').innerText = selectedFile.name;
+                fetchPreview();
+            }
+        });
+
+        function handleFileSelect(event) {
+            if (event.target.files.length > 0) {
+                selectedFile = event.target.files[0];
+                document.getElementById('fileName').innerText = selectedFile.name;
+                fetchPreview();
+            }
+        }
+
+        async function fetchPreview() {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch('http://localhost:8000/preview', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.rowCount !== undefined) {
+                    // Update stats
+                    document.getElementById('statsArea').style.display = 'flex';
+                    document.getElementById('rowCountBadge').innerText = `${data.rowCount} Rows`;
+                    document.getElementById('colCountBadge').innerText = `${data.colCount} Columns`;
+
+                    // Update Table
+                    const head = document.getElementById('tableHead');
+                    const body = document.getElementById('tableBody');
+                    head.innerHTML = `<tr>${data.columns.map(c => `<th>${c}</th>`).join('')}</tr>`;
+                    body.innerHTML = data.preview.map(row =>
+                        `<tr>${data.columns.map(c => `<td>${row[c]}</td>`).join('')}</tr>`
+                    ).join('');
+
+                    document.getElementById('previewArea').style.display = 'block';
+
+                    // Update Raw Text
+                    document.getElementById('rawTextPreview').innerText = data.textPreview;
+                }
+            } catch (err) {
+                console.error("Preview failed", err);
+            }
+        }
+
+        function togglePreview(mode) {
+            const table = document.getElementById('tableViewContainer');
+            const text = document.getElementById('textViewContainer');
+            const tableBtn = document.getElementById('tableBtn');
+            const textBtn = document.getElementById('textBtn');
+
+            if (mode === 'table') {
+                table.style.display = 'block';
+                text.style.display = 'none';
+                tableBtn.classList.add('selected');
+                textBtn.classList.remove('selected');
+            } else {
+                table.style.display = 'none';
+                text.style.display = 'block';
+                tableBtn.classList.remove('selected');
+                textBtn.classList.add('selected');
+            }
+        }
+
+        async function analyzeData() {
+            const question = document.getElementById('question').value;
+
+            if (!selectedFile) {
+                alert("Please upload a CSV file first!");
+                return;
+            }
+            if (!question.trim()) {
+                alert("Please enter a question!");
+                return;
+            }
+
+            // UI State
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultBox').style.display = 'none';
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('btnText').innerText = "Analyzing...";
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('question', question);
+
+            try {
+                const response = await fetch('http://localhost:8000/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.answer) {
+                    // Simple Markdown-ish to HTML conversion (basic bolding/lists)
+                    let formattedAnswer = data.answer
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\n/g, '<br>');
+
+                    document.getElementById('resultContent').innerHTML = formattedAnswer;
+                    document.getElementById('resultBox').style.display = 'block';
+                } else if (data.error) {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                alert("Failed to connect to backend. Make sure app.py is running on localhost:8000");
+                console.error(err);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('analyzeBtn').disabled = false;
+                document.getElementById('btnText').innerText = "Analyze Now";
+            }
+        }
+    </script>
+</body>
+
+</html>
